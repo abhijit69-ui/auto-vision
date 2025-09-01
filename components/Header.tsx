@@ -13,7 +13,7 @@ const Header = async ({ isAdminPage = false }: Props) => {
   const isAdmin = false;
 
   return (
-    <header className='fixed top-0 w-full bg-white/60 backdrop-blur-xs z-50 border-b'>
+    <header className='fixed top-0 w-full bg-white/60 backdrop-blur-md z-50 border-b'>
       <nav className='mx-auto px-4 py-4 flex items-center justify-between'>
         <Link href={isAdminPage ? '/admin' : '/'} className='flex'>
           <Image

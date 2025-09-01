@@ -123,7 +123,7 @@
 
 @layer utilities {
   .gradient-title {
-    @apply bg-gradient-to-r from-[#fffdfe] via-[#8fc6f3] to-[#0bb2ff]
+    @apply bg-gradient-to-r from-[#fffdfe] via-[#e79fd1] to-[#d6f2ff]
            font-extrabold tracking-tighter text-transparent bg-clip-text;
   }
 }
