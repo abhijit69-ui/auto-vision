@@ -1,5 +1,5 @@
-@import "tailwindcss";
-@import "tw-animate-css";
+@import 'tailwindcss';
+@import 'tw-animate-css';
 
 @custom-variant dark (&:is(.dark *));
 
@@ -118,5 +118,12 @@
   }
   body {
     @apply bg-background text-foreground;
+  }
+}
+
+@layer utilities {
+  .gradient-title {
+    @apply bg-gradient-to-r from-[#fffdfe] via-[#8fc6f3] to-[#0bb2ff]
+           font-extrabold tracking-tighter text-transparent bg-clip-text;
   }
 }
