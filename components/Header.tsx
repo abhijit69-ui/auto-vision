@@ -4,13 +4,16 @@ import Link from 'next/link';
 import React from 'react';
 import { Button } from './ui/button';
 import { ArrowLeft, CarFront, HeartIcon, Layout } from 'lucide-react';
+import { checkUser } from '@/lib/checkUser';
 
 interface Props {
   isAdminPage?: boolean;
 }
 
 const Header = async ({ isAdminPage = false }: Props) => {
-  const isAdmin = false;
+  const user = await checkUser();
+
+  const isAdmin = user?.role === 'ADMIn';
 
   return (
     <header className='fixed top-0 w-full bg-white/60 backdrop-blur-md z-50 border-b'>
