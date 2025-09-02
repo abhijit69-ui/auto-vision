@@ -24,7 +24,7 @@ const Header = async ({ isAdminPage = false }: Props) => {
             alt='autovison logo'
             width={200}
             height={60}
-            className='h-14 w-auto object-contain'
+            className='h-12 w-auto object-contain'
           />
           {isAdminPage && (
             <span className='text-xs font-extralight'>admin</span>
