@@ -1,3 +1,5 @@
+'use server';
+
 import { db } from '@/lib/prisma';
 import { CarStatus } from '@prisma/client';
 import { auth } from '@clerk/nextjs/server';
@@ -17,7 +19,7 @@ export interface CarDataInput {
   fuelType: string;
   transmission: string;
   bodyType: string;
-  seats?: number;
+  seats?: number | null;
   description: string;
   status?: CarStatus; // optional because Prisma will default to AVAILABLE
   featured?: boolean; // optional because Prisma defaults to false

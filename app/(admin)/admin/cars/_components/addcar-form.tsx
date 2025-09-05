@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useState } from 'react';
-import { useForm } from 'react-hook-form';
+import React, { useEffect, useState } from 'react';
+import { SubmitHandler, useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -29,6 +29,9 @@ import { toast } from 'sonner';
 import { Loader2, Upload, X } from 'lucide-react';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
+import useFetch from '@/hooks/use-fetch';
+import { addCar, CarDataInput } from '@/actions/cars';
+import { useRouter } from 'next/navigation';
 
 const fuelTypes = ['Petrol', 'Diesel', 'Electric', 'Hybrid', 'Plug-in Hybrid'];
 const transmissions = ['Automatic', 'Manual', 'Semi-Automatic'];
@@ -47,6 +50,8 @@ const AddCarForm = () => {
   const [activeTab, setActiveTab] = useState('ai');
   const [uploadedImages, setUploadedImages] = useState<string[]>([]);
   const [imageError, setImageError] = useState('');
+
+  const router = useRouter();
 
   const carFormSchema = z.object({
     make: z.string().min(1, 'Make is required'),
@@ -71,6 +76,8 @@ const AddCarForm = () => {
     featured: z.boolean().default(false),
   });
 
+  type CarFormInput = z.input<typeof carFormSchema>;
+
   const {
     register,
     setValue,
@@ -78,7 +85,7 @@ const AddCarForm = () => {
     formState: { errors },
     handleSubmit,
     watch,
-  } = useForm({
+  } = useForm<CarFormInput>({
     resolver: zodResolver(carFormSchema),
     defaultValues: {
       make: '',
@@ -97,11 +104,37 @@ const AddCarForm = () => {
     },
   });
 
-  const onSubmit = async (data: React.FormHTMLAttributes<HTMLFormElement>) => {
+  const {
+    data: addCarResult,
+    loading: addCarLoading,
+    fn: addCarFn,
+  } = useFetch(addCar);
+
+  useEffect(() => {
+    if (addCarResult?.success) {
+      toast.success('Car added successfully');
+      router.push('/admin/cars');
+    }
+  }, [addCarResult, router, addCarLoading]);
+
+  const onSubmit: SubmitHandler<CarFormInput> = async (data) => {
     if (uploadedImages.length === 0) {
       setImageError('Please upload at least one image');
       return;
     }
+
+    const carData: CarDataInput = {
+      ...data,
+      year: parseInt(data.year),
+      price: parseFloat(data.price),
+      mileage: parseInt(data.mileage),
+      seats: data.seats ? parseInt(data.seats) : null,
+    };
+
+    await addCarFn({
+      carData,
+      images: uploadedImages,
+    });
   };
 
   const onMultiImagesDrop = (acceptedFiles: File[]) => {
@@ -493,9 +526,9 @@ const AddCarForm = () => {
                 <Button
                   type='submit'
                   className='w-full md:w-auto cursor-pointer'
-                  disabled={true}
+                  disabled={addCarLoading}
                 >
-                  {true ? (
+                  {addCarLoading ? (
                     <>
                       <Loader2 className='mr-2 h-4 w-4 animate-spin' />
                       Adding Car...
