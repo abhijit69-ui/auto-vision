@@ -1,13 +1,14 @@
 'use server';
 
 import { db } from '@/lib/prisma';
-import { CarStatus } from '@prisma/client';
+import { CarStatus, Prisma } from '@prisma/client';
 import { auth } from '@clerk/nextjs/server';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { v4 as uuidv4 } from 'uuid';
 import { cookies } from 'next/headers';
 import { createClient } from '@/lib/supabase';
 import { revalidatePath } from 'next/cache';
+import { serializeCarData } from '@/lib/helper';
 
 export interface CarDataInput {
   make: string;
@@ -23,6 +24,8 @@ export interface CarDataInput {
   description: string;
   status?: CarStatus; // optional because Prisma will default to AVAILABLE
   featured?: boolean; // optional because Prisma defaults to false
+  createdAt?: Date;
+  updatedAt?: Date;
 }
 
 export interface AddCarParams {
@@ -236,5 +239,50 @@ export async function addCar({ carData, images }: AddCarParams) {
       console.error(error);
       throw new Error('Error adding car: Unknown error');
     }
+  }
+}
+
+export async function getCars(search = '') {
+  try {
+    const { userId } = await auth();
+    if (!userId) throw new Error('Unauthorized');
+
+    const user = await db.user.findUnique({
+      where: { clerkUserId: userId },
+    });
+
+    if (!user) throw new Error('User not found');
+
+    const where: Prisma.CarWhereInput = {};
+    if (search) {
+      where.OR = [
+        { make: { contains: search, mode: 'insensitive' } },
+        { model: { contains: search, mode: 'insensitive' } },
+        { color: { contains: search, mode: 'insensitive' } },
+      ];
+    }
+
+    const cars = await db.car.findMany({
+      where,
+      orderBy: { createdAt: 'desc' },
+    });
+    const serializedCars = cars.map((car) => serializeCarData(car));
+
+    return {
+      success: true,
+      data: serializedCars,
+    };
+  } catch (error) {
+    console.error('Error Fetching Cars: ', error);
+
+    let message = 'Something went wrong';
+    if (error instanceof Error) {
+      message = error.message;
+    }
+
+    return {
+      success: false,
+      error: message,
+    };
   }
 }
