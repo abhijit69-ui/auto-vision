@@ -361,5 +361,48 @@ export async function deleteCar(id: string) {
 // update cars
 export async function updateCarStatus(
   id: string,
-  data: { status?: CarStatus; featured?: boolean }
-) {}
+  { status, featured }: { status?: CarStatus; featured?: boolean }
+) {
+  try {
+    const { userId } = await auth();
+    if (!userId) throw new Error('Unauthorized');
+
+    const user = await db.user.findUnique({
+      where: { clerkUserId: userId },
+    });
+
+    if (!user) throw new Error('User not found');
+
+    const updateData: Prisma.CarUpdateInput = {};
+
+    if (status !== undefined) {
+      updateData.status = status;
+    }
+    if (featured !== undefined) {
+      updateData.featured = featured;
+    }
+
+    // update the car
+    await db.car.update({
+      where: { id },
+      data: updateData,
+    });
+
+    revalidatePath('/admin/cars');
+
+    return {
+      success: true,
+    };
+  } catch (error) {
+    console.error('Error updating car status:', error);
+    let message = 'Something went wrong';
+    if (error instanceof Error) {
+      message = error.message;
+    }
+
+    return {
+      success: false,
+      error: message,
+    };
+  }
+}
