@@ -241,7 +241,7 @@ export async function addCar({ carData, images }: AddCarParams) {
     }
   }
 }
-
+// get cars
 export async function getCars(search = '') {
   try {
     const { userId } = await auth();
@@ -286,3 +286,80 @@ export async function getCars(search = '') {
     };
   }
 }
+// delete cars
+export async function deleteCar(id: string) {
+  try {
+    const { userId } = await auth();
+    if (!userId) throw new Error('Unauthorized');
+
+    const user = await db.user.findUnique({
+      where: { clerkUserId: userId },
+    });
+
+    if (!user) throw new Error('User not found');
+
+    // fetch the car to get its images
+    const car = await db.car.findUnique({
+      where: { id },
+      select: { images: true },
+    });
+    if (!car) {
+      return {
+        success: false,
+        error: 'Car not found',
+      };
+    }
+
+    // delete the car from the database
+    await db.car.delete({
+      where: { id },
+    });
+
+    try {
+      const supabase = await createClient(cookies());
+      const filePaths = car.images
+        .map((imageUrl) => {
+          const url = new URL(imageUrl);
+          const pathMatch = url.pathname.match(/\/car-images\/(.*)/);
+          return pathMatch ? pathMatch[1] : null;
+        })
+        .filter(Boolean) as string[];
+
+      if (filePaths.length > 0) {
+        const { error } = await supabase.storage
+          .from('car-images')
+          .remove(filePaths);
+
+        if (error) {
+          console.error('Error deleting images:', error);
+        }
+      }
+    } catch (storageError) {
+      console.error('Error with storage operation:', storageError);
+    }
+
+    revalidatePath('/admin/cars');
+
+    return {
+      success: true,
+    };
+  } catch (error) {
+    console.error('Error deleting Cars: ', error);
+
+    let message = 'Something went wrong';
+    if (error instanceof Error) {
+      message = error.message;
+    }
+
+    return {
+      success: false,
+      error: message,
+    };
+  }
+}
+
+// update cars
+export async function updateCarStatus(
+  id: string,
+  data: { status?: CarStatus; featured?: boolean }
+) {}
