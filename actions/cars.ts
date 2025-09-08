@@ -88,7 +88,7 @@ Format your response as a clean JSON object with these fields:
 }
 
 Rules:
-- "price" must be a plain number string with commas for thousands, **no currency symbol and no ranges** (e.g. "200,000").
+- "price" must be a plain number string, **no currency symbol and no ranges** (e.g. "200000").
 - "mileage" should also be numeric string without units (e.g. "45000").
 - Only respond with the JSON object, nothing else.
 - Confidence must be a number between 0 and 1.
